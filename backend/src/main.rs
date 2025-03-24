@@ -7,7 +7,7 @@ use axum::{
 };
 use rusqlite::{params, Connection, Result};
 use serde::{Deserialize, Serialize};
-use std::net::SocketAddr;
+use tokio::net::TcpListener;
 
 #[derive(Serialize, Deserialize)]
 struct Calculation {
@@ -50,10 +50,9 @@ async fn main() -> Result<()> {
         .route("/history", get(get_history));
 
     // Run our app
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8000));
-    println!("Backend running on http://{}", addr);
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
+    let listener = TcpListener::bind("127.0.0.1:8000").await.unwrap();
+    println!("Backend running on http://{:?}", listener.local_addr());
+    axum::serve(listener, app.into_make_service())
         .await
         .unwrap();
 

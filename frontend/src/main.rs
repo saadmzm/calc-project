@@ -7,7 +7,7 @@ use axum::{
 };
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use std::net::SocketAddr;
+use tokio::net::TcpListener;
 
 #[derive(Serialize, Deserialize)]
 struct Calculation {
@@ -33,10 +33,9 @@ async fn main() {
         .route("/calculate", get(calculate));
 
     // Run our app
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    println!("Frontend running on http://{}", addr);
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
+    let listener = TcpListener::bind("127.0.0.1:3000").await.unwrap();
+    println!("Frontend running on http://{:?}", listener.local_addr());
+    axum::serve(listener, app.into_make_service())
         .await
         .unwrap();
 }
